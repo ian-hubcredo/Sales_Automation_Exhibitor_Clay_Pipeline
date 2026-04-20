@@ -1,0 +1,1898 @@
+{
+  "name": "SA Flow",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "WEB SCRAPE",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Website URL",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -6176,
+        96
+      ],
+      "id": "87df2282-e92e-4a5b-8aeb-7486f6877f37",
+      "name": "On form submission",
+      "webhookId": "<REDACTED_WEBHOOK_ID>"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a domain research specialist. Your task is to find the official website domain for a company using the provided information.\n\nCompany Information:\n- Company Name: {{ $json.company_name }}\n- Company Category:  {{ $json.Category }}\n- Booth Number: {{ $json.booths }}\n\nInstructions:\n1. Use web search to find the official website domain for this company\n2. Cross-reference the company name, location, and address to ensure accuracy\n3. Look for the primary business domain (avoid subdomains like careers.company.com)\n4. Verify the domain is active and belongs to the correct company\n5. If multiple domains exist, choose the main corporate website\n\nCRITICAL: You must return ONLY a valid JSON response in this exact format:\n```json\n{\n  \"booths\": \"{{ $json.booths }}\",\n  \"company_name\": \"{{ $json.company_name }}\",\n  \"company_domain\": \"example.com\"\n}",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        -5056,
+        416
+      ],
+      "id": "9d363799-692b-45ac-a358-211cd5e37b4a",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5",
+          "mode": "list",
+          "cachedResultName": "gpt-5"
+        },
+        "options": {
+          "responseFormat": "text"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -5056,
+        624
+      ],
+      "id": "9302dcca-e146-4208-8e31-2ec05be399f0",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "<REDACTED_CREDENTIAL_ID>", "name": "<REDACTED_CREDENTIAL_NAME>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"company_name\": \"\",\n  \"booth\": \"\",\n  \"company_website\": \"builtrobotics.com\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -4896,
+        624
+      ],
+      "id": "4c07761b-d3fd-4059-8d91-b7d436cf0b8d",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "=Apollo_Data_{{ $now.format(\"D\") }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        672,
+        176
+      ],
+      "id": "b5807e76-725b-40fd-864a-22a4bae2816a",
+      "name": "Create spreadsheet",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "<REDACTED_CREDENTIAL_ID>", "name": "<REDACTED_CREDENTIAL_NAME>"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        896,
+        96
+      ],
+      "id": "b43cd9d0-2e12-42d2-862c-86eb651c4dc4",
+      "name": "Merge"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        96
+      ],
+      "id": "ad469e8d-838a-4baa-a2fc-145130a48683",
+      "name": "Wait2",
+      "webhookId": "<REDACTED_WEBHOOK_ID>"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        96
+      ],
+      "id": "6d158baa-d76b-4017-8efe-ef09ea210e82",
+      "name": "Wait3",
+      "webhookId": "<REDACTED_WEBHOOK_ID>"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $node[\"Create spreadsheet\"].json[\"spreadsheetId\"] }}\n",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "linkedin",
+              "displayName": "linkedin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "spreadsheetId",
+              "displayName": "spreadsheetId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "properties",
+              "displayName": "properties",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sheets",
+              "displayName": "sheets",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "spreadsheetUrl",
+              "displayName": "spreadsheetUrl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1568,
+        96
+      ],
+      "id": "6131f76b-231b-45ed-8e52-4894ec9aec0f",
+      "name": "Append or update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "<REDACTED_CREDENTIAL_ID>", "name": "<REDACTED_CREDENTIAL_NAME>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter all input items that do NOT have \"spreadsheetId\" in their json\nconst cleaned = items.filter(item => !item.json?.spreadsheetId);\nreturn cleaned;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        96
+      ],
+      "id": "b3644969-d239-4e7b-8e39-d9bb145abe09",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "01e146e1-44b4-46df-9e47-56672481b996",
+              "leftValue": "={{ $json.Domain }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "129937a1-6174-47ea-923d-4c1e09955ade",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -5280,
+        96
+      ],
+      "id": "0fd1cfdc-66db-4a23-a4d6-2c29ffde709d",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "company_name",
+        "joinMode": "enrichInput1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        224,
+        96
+      ],
+      "id": "68b75a06-75f0-426e-828e-4f3e2df26665",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "instructions": "remove the list and give outputs in seperate fields",
+        "codeGeneratedForPrompt": "remove the list and give outputs in seperate fields",
+        "jsCode": "const items = $input.all();\nconst updatedItems = items.map((item) => {\n  const output = item?.json?.output;\n  return { ...output };\n});\nreturn updatedItems;\n"
+      },
+      "type": "n8n-nodes-base.aiTransform",
+      "typeVersion": 1,
+      "position": [
+        -4704,
+        224
+      ],
+      "id": "6163ed24-873a-4190-9870-8aebaa021085",
+      "name": "AI Transform1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code Node - Extract organization_id and organization_name\n// Input data should be available in the 'items' array\n\nconst outputData = [];\n\n// Loop through each item in the input\nfor (const item of $input.all()) {\n  const data = item.json;\n  \n  // Extract only organization_id and organization_name\n  const extractedData = {\n    organization_id: data.organization_id,\n    organization_name: data.organization_name\n  };\n  \n  outputData.push({ json: extractedData });\n}\n\nreturn outputData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5552,
+        1520
+      ],
+      "id": "d9530d09-3d2f-4683-ae0b-8c34d5712b09",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "// For n8n Code node - get input data\nconst inputData = $input.all();\n\n// Extract only the required fields from each item\nconst extractedData = inputData.map(item => {\n  const company = item.json; // Access the JSON data\n  return {\n    company_name: company._company_name,\n    company_website: company.company_website,\n    company_address: company._company_address,\n    company_linkedin: company.social_url_linkedin,\n    booths: company.booths,\n    company_country: company._company_country\n  };\n});\n\n// Return the extracted data for n8n\nreturn extractedData.map(company => ({ json: company }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5728,
+        96
+      ],
+      "id": "29028c87-148d-418e-bf9d-93437456ea6d",
+      "name": "cleaning node"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1a3gP0UIs-DGggWmJGHiE2poaOjMWn1YAjnEJj2gay5Q",
+          "mode": "list",
+          "cachedResultName": "NABNY 25",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/<REDACTED_SHEET_ID>/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/<REDACTED_SHEET_ID>/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company_website",
+              "displayName": "company_website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company_address",
+              "displayName": "company_address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "booths",
+              "displayName": "booths",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company_country",
+              "displayName": "company_country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -5504,
+        96
+      ],
+      "id": "fb3771a0-beda-4230-86c0-537533634361",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "<REDACTED_CREDENTIAL_ID>", "name": "<REDACTED_CREDENTIAL_NAME>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1792,
+        96
+      ],
+      "id": "7bd0999c-520b-4cf5-b0f0-c5785ea76652",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2016,
+        96
+      ],
+      "id": "b6c67709-7eb7-4a60-b281-5998140b7829",
+      "name": "Wait4",
+      "webhookId": "<REDACTED_WEBHOOK_ID>"
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorId": {
+          "__rl": true,
+          "value": "ZF10OciYUgsj6Xlai",
+          "mode": "list",
+          "cachedResultName": "Map Your Show Exhibitor List Scraper (skython/map-your-show-exhibitor-list-scraper)",
+          "cachedResultUrl": "https://console.apify.com/actors/ZF10OciYUgsj6Xlai/input"
+        },
+        "customBody": "={\n  \"output_type\": \"compact\",\n  \"start_url\": \"{{ $('On form submission').first().json['Website URL']}}\"\n}",
+        "authentication": "apifyOAuth2Api"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        -5952,
+        96
+      ],
+      "id": "72c432c7-ab5d-42a3-b287-67c2b8dadd61",
+      "name": "MapYourShow Scrapper",
+      "credentials": {
+        "apifyOAuth2Api": {
+          "id": "<REDACTED_CREDENTIAL_ID>", "name": "<REDACTED_CREDENTIAL_NAME>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simple Data Cleaning Code for N8N\n// Extracts and formats organization data without filtering\n\nconst inputData = $input.all();\n\nfunction cleanData(items) {\n  return items.map(item => {\n    // Handle different data structures\n    const org = item.organization || item.json?.organization || item;\n    \n    // Skip if no organization data found\n    if (!org) {\n      console.log('No organization data found for item');\n      return null;\n    }\n    \n    return {\n      organization_name: org.name || 'N/A',\n      organization_id: org.id || 'N/A',\n      domain: org.primary_domain || 'N/A',\n      website: org.website_url || 'N/A',\n      industry: org.industry || 'N/A',\n      employee_size: org.estimated_num_employees || 0,\n      location: `${org.city || 'N/A'}, ${org.state || 'N/A'}, ${org.country || 'N/A'}`,\n      revenue: org.annual_revenue_printed || org.organization_revenue_printed || 'N/A',\n      founded_year: org.founded_year || 'N/A',\n      keywords_sample: (org.keywords || []).slice(0, 5).join(', ') || 'N/A'\n    };\n  }).filter(item => item !== null); // Remove any null entries\n}\n\ntry {\n  // Clean and format the data\n  const cleanedData = cleanData(inputData);\n  \n  // Log results\n  console.log(`Input records: ${inputData.length}`);\n  console.log(`Cleaned records: ${cleanedData.length}`);\n  \n  // Return cleaned data in n8n format\n  return cleanedData.map(company => ({ json: company }));\n  \n} catch (error) {\n  console.error('Error cleaning data:', error);\n  console.error('Error details:', error.message);\n  throw error;\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3136,
+        96
+      ],
+      "id": "412451dc-3d0c-4618-a18f-884cc096fc02",
+      "name": "cleaning node1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -5552,
+        672
+      ],
+      "id": "6eadc468-8990-4d14-bd08-7bda2d54dd2a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1a3gP0UIs-DGggWmJGHiE2poaOjMWn1YAjnEJj2gay5Q",
+          "mode": "list",
+          "cachedResultName": "NABNY 25",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/<REDACTED_SHEET_ID>/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/<REDACTED_SHEET_ID>/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        0,
+        192
+      ],
+      "id": "a320abfc-67b1-4c86-a68b-00a2b5e2d7fb",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "<REDACTED_CREDENTIAL_ID>", "name": "<REDACTED_CREDENTIAL_NAME>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -3808,
+        96
+      ],
+      "id": "2818e0c5-3c2d-4508-866e-dd2f3a95c99c",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -3584,
+        96
+      ],
+      "id": "b82035a9-0991-407b-a1b2-d159b2379247",
+      "name": "Wait6",
+      "webhookId": "<REDACTED_WEBHOOK_ID>"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -4480,
+        96
+      ],
+      "id": "fc54bcd8-4974-479a-a9cf-f491ae29dc42",
+      "name": "Merge3",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1a3gP0UIs-DGggWmJGHiE2poaOjMWn1YAjnEJj2gay5Q",
+          "mode": "list",
+          "cachedResultName": "NABNY 25",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/<REDACTED_SHEET_ID>/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 847900114,
+          "mode": "list",
+          "cachedResultName": "ORG ID",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/<REDACTED_SHEET_ID>/edit#gid=847900114"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "organization_name",
+              "displayName": "organization_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "organization_id",
+              "displayName": "organization_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "domain",
+              "displayName": "domain",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "industry",
+              "displayName": "industry",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "employee_size",
+              "displayName": "employee_size",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "revenue",
+              "displayName": "revenue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "founded_year",
+              "displayName": "founded_year",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "keywords_sample",
+              "displayName": "keywords_sample",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2912,
+        96
+      ],
+      "id": "acf73b72-d2c5-4215-8ca8-35473bdfa2dc",
+      "name": "Append or update row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "<REDACTED_CREDENTIAL_ID>", "name": "<REDACTED_CREDENTIAL_NAME>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "61beaa0b-32bd-4149-b8c6-703205694493",
+              "leftValue": "={{ $json.organization_id }}",
+              "rightValue": "N/A",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "bd4a58ed-a489-4157-8c2f-04f9c87bb417",
+              "leftValue": "={{ $json.organization_id }}",
+              "rightValue": "LinkedIn",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2688,
+        96
+      ],
+      "id": "bf3ffc41-d55d-4113-a5e4-5bb9bd67e1b9",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1EwMSq9X_ZyS2QKFa549sApj25u8XRwbFPZ29NqWt_xo",
+          "mode": "list",
+          "cachedResultName": "Apollo_Data_10/15/2025 (NAB Show)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/<REDACTED_SHEET_ID>/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/<REDACTED_SHEET_ID>/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        0,
+        0
+      ],
+      "id": "31acd8ed-09d3-4496-a4e3-58f7622ed947",
+      "name": "Get row(s) in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "<REDACTED_CREDENTIAL_ID>", "name": "<REDACTED_CREDENTIAL_NAME>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.clay.com/v3/sources/webhook/pull-in-data-from-a-webhook-<CLAY_WEBHOOK_ID>",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "Name",
+              "value": "={{ $json.name }}"
+            },
+            {
+              "name": "Title",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "name": "Company name",
+              "value": "={{ $json.company_name }}"
+            },
+            {
+              "name": "Email",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "LinkedIn",
+              "value": "={{ $json.linkedin_url }}"
+            },
+            {
+              "name": "Company Website",
+              "value": "={{ $json.company_website }}"
+            },
+            {
+              "name": "Company LinkedIn",
+              "value": "={{ $json.company_linkedin }}"
+            },
+            {
+              "name": "Booths",
+              "value": "={{ $json.booths }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2240,
+        96
+      ],
+      "id": "5a0d513d-aa38-4b17-8e17-37f6593b5d8a",
+      "name": "Pushing to Clay",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "03ba1ef9-3023-435e-9d21-c80c5939a679",
+              "leftValue": "={{ $json.organization_name }}",
+              "rightValue": "Alibaba.com",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2464,
+        96
+      ],
+      "id": "177c6564-cb40-4ffe-9a64-835e6830bef8",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "url": "https://api.apollo.io/api/v1/organizations/enrich",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "domain",
+              "value": "={{ $json.company_website }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3360,
+        96
+      ],
+      "id": "09679d43-474f-4d57-a7d8-cb5401637743",
+      "name": "Organization Enrich",
+      "retryOnFail": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "<REDACTED_CREDENTIAL_ID>", "name": "<REDACTED_CREDENTIAL_NAME>"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1qxJpURd6dazhS27b6iOIB5DepS3PwWLqH_U0Sm5UOdQ",
+          "mode": "list",
+          "cachedResultName": "SEMA 2025",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/<REDACTED_SHEET_ID>/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/<REDACTED_SHEET_ID>/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "company_name": "={{ $json.company_name }}",
+            "Domain": "={{ $json.company_website }}"
+          },
+          "matchingColumns": [
+            "company_name"
+          ],
+          "schema": [
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "booths",
+              "displayName": "booths",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Domain",
+              "displayName": "Domain",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -4032,
+        96
+      ],
+      "id": "89a83dab-6fd6-4b29-ad23-a7d8b21eeb0b",
+      "name": "Append or update row in sheet3",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "<REDACTED_CREDENTIAL_ID>", "name": "<REDACTED_CREDENTIAL_NAME>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f77aca26-85e8-4ecb-b7d9-d28feb649678",
+              "name": "people",
+              "value": "={{ $json.people }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1568,
+        96
+      ],
+      "id": "23b70645-b6e0-4bde-ad72-fb9597383c51",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code Node to extract specific fields from people data\nconst cleanedData = [];\n\n// Process each item from the input\nfor (const inputItem of $input.all()) {\n  const peopleData = inputItem.json.people;\n  \n  // Check if people data exists and is a string (JSON)\n  if (peopleData && typeof peopleData === 'string') {\n    try {\n      const parsedPeople = JSON.parse(peopleData);\n      \n      // Process each person in the array\n      parsedPeople.forEach(person => {\n        // Extract only the specified fields\n        const cleanedPerson = {\n          id: person.id || null,\n          name: person.name || null,\n          first_name: person.first_name || null,\n          last_name: person.last_name || null,\n          title: person.title || null,\n          linkedin_url: person.linkedin_url || null,\n          company_name: person.organization?.name || null,\n          company_linkedin: person.organization?.linkedin_url || null,\n          company_website: person.organization?.website_url || null\n        };\n        \n        cleanedData.push(cleanedPerson);\n      });\n      \n    } catch (error) {\n      console.error('Error parsing people data:', error);\n    }\n  }\n}\n\n// Return the cleaned data\nreturn cleanedData.map(person => ({ json: person }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1344,
+        96
+      ],
+      "id": "9cc07164-561b-44e3-922c-3e48d8545aca",
+      "name": "data cleaning"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7bf1fa05-4959-4f6a-9ae4-8975cbb5597f",
+              "leftValue": "={{ $json.organization_name }}",
+              "rightValue": "N/A",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -5328,
+        1520
+      ],
+      "id": "7c7c7a91-1c1b-493e-aa79-86f57b954808",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1qxJpURd6dazhS27b6iOIB5DepS3PwWLqH_U0Sm5UOdQ",
+          "mode": "list",
+          "cachedResultName": "SEMA 2025",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/<REDACTED_SHEET_ID>/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 84164974,
+          "mode": "list",
+          "cachedResultName": "Mareting people",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/<REDACTED_SHEET_ID>/edit#gid=84164974"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -448,
+        96
+      ],
+      "id": "d227f438-566f-4df2-8f08-408c25290313",
+      "name": "Append or update row in sheet5",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "<REDACTED_CREDENTIAL_ID>", "name": "<REDACTED_CREDENTIAL_NAME>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -2240,
+        96
+      ],
+      "id": "8e146dec-b4b2-4532-b9eb-ce09e5ebffe3",
+      "name": "Loop Over Items3"
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -2016,
+        96
+      ],
+      "id": "d434b2f6-4461-40a2-97f1-0f5247a49565",
+      "name": "Wait8",
+      "webhookId": "<REDACTED_WEBHOOK_ID>"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "caba7a3e-5a41-4af6-afc5-5cad297d8eb3",
+              "leftValue": "={{ $json.company_website }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -5552,
+        1072
+      ],
+      "id": "4e6405b4-e781-47e4-8990-774978ab1fa7",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// For each input item, check if Tittle contains \"Marketing\"\nconst filteredItems = items.filter(item => {\n  const title = item.json.title || '';\n  return title.toLowerCase().includes('marketing');\n});\n\nreturn filteredItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -896,
+        96
+      ],
+      "id": "6be0c43e-5e70-42d9-a784-0edaf96b7c73",
+      "name": "Marketing people filter"
+    },
+    {
+      "parameters": {
+        "jsCode": "const COMPANY_LIMIT = 3;\nconst EXCEPTION_COUNT = 4;\n\nconst allPeople = $items().map(item => item.json);\n\nconst peopleByCompany = allPeople.reduce((acc, person) => {\n  const company = person.company_name;\n  if (!acc[company]) acc[company] = [];\n  acc[company].push(person);\n  return acc;\n}, {});\n\nconst finalPeopleList = Object.values(peopleByCompany).flatMap(members => {\n  // If there are exactly 4 people, include all of them\n  if (members.length === EXCEPTION_COUNT) {\n    return members;\n  }\n  // Otherwise, apply the normal limit\n  return members.slice(0, COMPANY_LIMIT);\n});\n\nreturn finalPeopleList.map(person => ({ json: person }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        96
+      ],
+      "id": "a2dbbc8d-fa0f-4822-99a0-afab5ceadb72",
+      "name": "Limitng people filter"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract all company names\nconst companyNames = items.map(item => item.json.company_name);\n\n// Get unique company names using Set\nconst uniqueCompanies = [...new Set(companyNames)];\n\n// Count of unique companies\nconst uniqueCount = uniqueCompanies.length;\n\n// Return the result\nreturn [{\n  json: {\n    unique_company_count: uniqueCount,\n    unique_companies: uniqueCompanies,\n    total_records: items.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        96
+      ],
+      "id": "6363c7e1-be4b-4168-b0d4-d52091b2fdef",
+      "name": "overall count"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apollo.io/api/v1/mixed_people/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organization_ids\": [ \"{{ $json.organization_id }}\"],\n  \"person_locations\":[\"United States\"],\n  \"person_seniorities\": [ \"vp\", \"director\", \"head\"],\n  \"page\": 1,\n  \"per_page\": 100\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1792,
+        96
+      ],
+      "id": "e5e384c4-4db5-4265-b290-b0e92b10593f",
+      "name": "Extracting people",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "<REDACTED_CREDENTIAL_ID>", "name": "<REDACTED_CREDENTIAL_NAME>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1qxJpURd6dazhS27b6iOIB5DepS3PwWLqH_U0Sm5UOdQ",
+          "mode": "list",
+          "cachedResultName": "SEMA 2025",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/<REDACTED_SHEET_ID>/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 84164974,
+          "mode": "list",
+          "cachedResultName": "Mareting people",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/<REDACTED_SHEET_ID>/edit#gid=84164974"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1120,
+        96
+      ],
+      "id": "0baa4e4a-1fc0-44b2-a771-96ffa8adeaa6",
+      "name": "Append or update row in sheet6",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "<REDACTED_CREDENTIAL_ID>", "name": "<REDACTED_CREDENTIAL_NAME>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst itemCount = items.length;\n\nreturn [{ json: { itemCount }, pairedItem: items.map((_, index) => index) }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5552,
+        1296
+      ],
+      "id": "3448f46e-b44d-40ec-8dec-fda7bfbbce3a",
+      "name": "Count"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve all organizations from previous node\nconst organizations = $input.all();\n\n// Base URL template without organizationIds[]\nconst baseUrl = \"https://app.apollo.io/#/people?personSeniorities[]=vp&personSeniorities[]=director&personSeniorities[]=head&prospectedByCurrentTeam[]=no&sortByField=%5Bnone%5D&sortAscending=false&personDepartmentOrSubdepartments[]=master_marketing\";\n\n// Build the organizationIds[] part dynamically\nconst orgParam = organizations\n  .map(item => `organizationIds[]=${item.json.organization_id}`)\n  .join(\"&\");\n\n// Construct full URL with all IDs\nconst url = `${baseUrl}&${orgParam}`;\n\n// Output one item with the combined URL\nreturn [\n  {\n    json: {\n      input: { url },\n      include_email: true\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5552,
+        1744
+      ],
+      "id": "b3ba8200-2d64-4edf-b6c6-22e87042eaad",
+      "name": "URL"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst updatedItems = items.map((item) => {\n  let website = item?.json?.company_website || \"\";\n  // Remove protocol (http, https)\n  website = website.replace(/^https?:\\/\\//, \"\");\n  // Remove \"www.\"\n  website = website.replace(/^www\\./, \"\");\n  // Extract hostname up to first slash or end of string\n  website = website.split(\"/\")[0];\n  item.json.company_website = website;\n  return item;\n});\nreturn updatedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4256,
+        96
+      ],
+      "id": "f5ecc7b3-4d29-47fd-b675-982ba76c8d53",
+      "name": "Cleaning website"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# Loop over input items and add a new field called 'my_new_field' to the JSON of each one\nfor item in _items:\n  item[\"json\"][\"my_new_field\"] = 1\nreturn _items"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5536,
+        880
+      ],
+      "id": "cdd4f4aa-22c0-491b-84c7-915929b53b61",
+      "name": "Code in Python"
+    }
+  ],
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "MapYourShow Scrapper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "AI Transform1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "node": "Create spreadsheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Transform1": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cleaning node": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wait4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait4": {
+      "main": [
+        [
+          {
+            "node": "Pushing to Clay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MapYourShow Scrapper": {
+      "main": [
+        [
+          {
+            "node": "cleaning node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cleaning node1": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wait6",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait6": {
+      "main": [
+        [
+          {
+            "node": "Organization Enrich",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Organization Enrich": {
+      "main": [
+        [
+          {
+            "node": "cleaning node1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "data cleaning",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items3": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wait8",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait8": {
+      "main": [
+        [
+          {
+            "node": "Extracting people",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing people filter": {
+      "main": [
+        [
+          {
+            "node": "Limitng people filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limitng people filter": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet5": {
+      "main": [
+        [
+          {
+            "node": "overall count",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Cleaning website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extracting people": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "data cleaning": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet6": {
+      "main": [
+        [
+          {
+            "node": "Marketing people filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet2": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "overall count": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cleaning website": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in Python": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
